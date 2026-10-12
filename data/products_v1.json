@@ -1,0 +1,29 @@
+[
+  {
+    "title": "Keyboard",
+    "cost": 120.00,
+    "temp_notes": "Supplier changes in Q3",
+    "street": "Industriestraße 12",
+    "city": "Hamburg",
+    "stock": 25,
+    "status": "standard"
+  },
+  {
+    "title": "Mouse",
+    "cost": 45.50,
+    "temp_notes": "Check returns",
+    "street": "Hafenstraße 4",
+    "city": "Bremen",
+    "stock": 8,
+    "status": "standard"
+  },
+  {
+    "title": "27-Inches 4K Monitor",
+    "cost": 349.99,
+    "temp_notes": "Remaining stock from warehouse A",
+    "street": "Technologiepark 7",
+    "city": "Berlin",
+    "stock": 30,
+    "status": "standard"
+  }
+]
