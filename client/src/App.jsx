@@ -7,10 +7,12 @@ import {
   Modal,
   TextInput,
   NumberInput,
+  Select,
   Group,
   Stack,
   Paper,
   Text,
+  Badge,
 } from '@mantine/core';
 import { IconEdit, IconDatabase } from '@tabler/icons-react';
 
@@ -25,7 +27,7 @@ function App() {
       const data = await res.json();
       setProducts(data);
     } catch (err) {
-      console.error('Fehler beim Laden:', err);
+      console.error('Error loading:', err);
     }
   };
 
@@ -41,16 +43,19 @@ function App() {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
+      const payload = { ...selectedProduct };
+      delete payload.temp_notes;
+
       await fetch(`http://localhost:5000/api/products/${selectedProduct._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(selectedProduct),
+        body: JSON.stringify(payload),
       });
       setOpened(false);
       setSelectedProduct(null);
       loadProducts();
     } catch (err) {
-      console.error('Fehler beim Speichern:', err);
+      console.error('Error saving:', err);
     }
   };
 
@@ -60,9 +65,12 @@ function App() {
         <Group justify="space-between">
           <div>
             <Title order={2}>Inventory Management Dashboard</Title>
-            <Text c="dimmed" size="sm">
-              Status: <strong>GUI v1 (Origin Schema)</strong>
-            </Text>
+            <Group gap="xs" mt={4}>
+              <Badge color="blue" variant="filled">GUI v2</Badge>
+              <Text c="dimmed" size="sm">
+                Evolution: <strong>Field added (Category) & Feld removed (Notes)</strong>
+              </Text>
+            </Group>
           </div>
           <Button
             leftSection={<IconDatabase size={16} />}
@@ -79,19 +87,23 @@ function App() {
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Title</Table.Th>
+              <Table.Th>Category</Table.Th>
               <Table.Th>Cost</Table.Th>
-              <Table.Th>Note</Table.Th>
               <Table.Th>City</Table.Th>
               <Table.Th>Stock</Table.Th>
-              <Table.Th style={{ textAlign: 'right' }}>Action</Table.Th>
+              <Table.Th style={{ textAlign: 'right' }}>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {products.map((p) => (
               <Table.Tr key={p._id}>
                 <Table.Td fw={500}>{p.title}</Table.Td>
+                <Table.Td>
+                  <Badge color={p.category ? 'teal' : 'gray'} variant="light">
+                    {p.category || 'No category'}
+                  </Badge>
+                </Table.Td>
                 <Table.Td>{p.cost !== undefined ? `${p.cost.toFixed(2)} €` : '—'}</Table.Td>
-                <Table.Td c="dimmed">{p.temp_notes || '—'}</Table.Td>
                 <Table.Td>{p.city}</Table.Td>
                 <Table.Td>{p.stock} Stk.</Table.Td>
                 <Table.Td style={{ textAlign: 'right' }}>
@@ -113,7 +125,7 @@ function App() {
       <Modal
         opened={opened}
         onClose={() => setOpened(false)}
-        title="Edit Product (manual data manipulation)"
+        title="Produkt bearbeiten (Schema v2)"
         centered
       >
         {selectedProduct && (
@@ -128,6 +140,16 @@ function App() {
                 required
               />
 
+              <Select
+                label="Category"
+                placeholder="Select Category"
+                data={['Hardware', 'Peripheral', 'Accesories', 'Office Supplies']}
+                value={selectedProduct.category || null}
+                onChange={(val) =>
+                  setSelectedProduct({ ...selectedProduct, category: val })
+                }
+              />
+
               <NumberInput
                 label="Cost (€)"
                 value={selectedProduct.cost ?? 0}
@@ -135,14 +157,6 @@ function App() {
                 fixedDecimalScale
                 onChange={(val) =>
                   setSelectedProduct({ ...selectedProduct, cost: Number(val) })
-                }
-              />
-
-              <TextInput
-                label="Note"
-                value={selectedProduct.temp_notes || ''}
-                onChange={(e) =>
-                  setSelectedProduct({ ...selectedProduct, temp_notes: e.target.value })
                 }
               />
 
