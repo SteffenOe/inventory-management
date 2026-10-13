@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   Container,
   Title,
@@ -13,8 +13,9 @@ import {
   Paper,
   Text,
   Badge,
-} from '@mantine/core';
-import { IconEdit, IconDatabase } from '@tabler/icons-react';
+} from "@mantine/core";
+import { IconEdit, IconDatabase, IconFlame } from "@tabler/icons-react";
+import { notifications } from '@mantine/notifications';
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -23,11 +24,11 @@ function App() {
 
   const loadProducts = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/products');
+      const res = await fetch("http://localhost:5000/api/products");
       const data = await res.json();
       setProducts(data);
     } catch (err) {
-      console.error('Error loading:', err);
+      console.error("Error loading:", err);
     }
   };
 
@@ -35,18 +36,36 @@ function App() {
     loadProducts();
   }, []);
 
+  const handleTriggerSaleCampaign = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/products/apply-sale", {
+        method: "POST",
+      });
+      const data = await res.json();
+      notifications.show({
+        title: "Success",
+        message: `${data.modifiedCount} Products updated.`,
+        color: "green"
+      });
+      loadProducts();
+    } catch (err) {
+      console.error("Error while applying sale:", err);
+    }
+  };
+
   const handleEditClick = (product) => {
     const normalizedPrice = product.price ?? product.cost ?? 0;
     const normalizedLocation =
       product.location ??
       (product.street || product.city
-        ? `${product.street || ''}, ${product.city || ''}`
-        : '');
+        ? `${product.street || ""}, ${product.city || ""}`
+        : "");
 
     setSelectedProduct({
       ...product,
       price: normalizedPrice,
       location: normalizedLocation,
+      status: product.status || "standard",
     });
     setOpened(true);
   };
@@ -55,16 +74,15 @@ function App() {
     e.preventDefault();
     try {
       const payload = { ...selectedProduct };
-
       delete payload.cost;
       delete payload.street;
       delete payload.city;
       delete payload.temp_notes;
-      payload.schemaVersion = 3;
+      payload.schemaVersion = 4;
 
       await fetch(`http://localhost:5000/api/products/${selectedProduct._id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
@@ -72,7 +90,7 @@ function App() {
       setSelectedProduct(null);
       loadProducts();
     } catch (err) {
-      console.error('Error saving:', err);
+      console.error("Error saving:", err);
     }
   };
 
@@ -83,19 +101,35 @@ function App() {
           <div>
             <Title order={2}>Inventory Management Dashboard</Title>
             <Group gap="xs" mt={4}>
-              <Badge color="violet" variant="filled">GUI v3</Badge>
+              <Badge color="red" variant="filled">
+                GUI v4
+              </Badge>
               <Text c="dimmed" size="sm">
-                Evolution: <strong>Field renamed (cost → price) & Fields merged (street + city → location)</strong>
+                Evolution:{" "}
+                <strong>
+                  Conditional Updates of fields Sale & Rabattierung where stock
+                  ≥ 20
+                </strong>
               </Text>
             </Group>
           </div>
-          <Button
-            leftSection={<IconDatabase size={16} />}
-            variant="light"
-            onClick={loadProducts}
-          >
-            Update
-          </Button>
+          <Group>
+            <Button
+              leftSection={<IconFlame size={16} />}
+              color="red"
+              variant="filled"
+              onClick={handleTriggerSaleCampaign}
+            >
+              Apply sale (stock ≥ 20)
+            </Button>
+            <Button
+              leftSection={<IconDatabase size={16} />}
+              variant="light"
+              onClick={loadProducts}
+            >
+              Update
+            </Button>
+          </Group>
         </Group>
       </Paper>
 
@@ -105,41 +139,57 @@ function App() {
             <Table.Tr>
               <Table.Th>Title</Table.Th>
               <Table.Th>Category</Table.Th>
+              <Table.Th>Status</Table.Th>
               <Table.Th>Price</Table.Th>
               <Table.Th>Location</Table.Th>
               <Table.Th>Stock</Table.Th>
-              <Table.Th>Schema-Version</Table.Th>
-              <Table.Th style={{ textAlign: 'right' }}>Actions</Table.Th>
+              <Table.Th>Schema</Table.Th>
+              <Table.Th style={{ textAlign: "right" }}>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {products.map((p) => {
               const currentPrice = p.price ?? p.cost ?? 0;
-              const currentLocation =
-                p.location ||
-                (p.street || p.city ? `${p.street || ''}, ${p.city || ''}` : '—');
+              const isSale = p.status === "sale";
 
               return (
                 <Table.Tr key={p._id}>
                   <Table.Td fw={500}>{p.title}</Table.Td>
                   <Table.Td>
                     <Badge color="teal" variant="light">
-                      {p.category || 'Allgemein'}
+                      {p.category || "Hardware"}
                     </Badge>
                   </Table.Td>
-                  <Table.Td fw={600} c="blue">
+                  <Table.Td>
+                    <Badge
+                      color={isSale ? "red" : "gray"}
+                      variant={isSale ? "filled" : "outline"}
+                    >
+                      {p.status ? p.status.toUpperCase() : "STANDARD"}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td fw={700} c={isSale ? "red" : "dark"}>
                     {currentPrice.toFixed(2)} €
                   </Table.Td>
                   <Table.Td>
-                      <Text size="sm">{currentLocation}</Text>
+                    <Group gap={4}>
+                      <Text size="sm">{p.location || "—"}</Text>
+                    </Group>
                   </Table.Td>
-                  <Table.Td>{p.stock} pcs.</Table.Td>
                   <Table.Td>
-                    <Badge color={p.schemaVersion === 3 ? 'green' : 'orange'} size="sm" variant="dot">
+                    <Text
+                      fw={p.stock >= 20 ? 700 : 400}
+                      c={p.stock >= 20 ? "orange" : "inherit"}
+                    >
+                      {p.stock} pcs.
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Badge color="violet" size="sm" variant="dot">
                       v{p.schemaVersion || 1}
                     </Badge>
                   </Table.Td>
-                  <Table.Td style={{ textAlign: 'right' }}>
+                  <Table.Td style={{ textAlign: "right" }}>
                     <Button
                       size="xs"
                       variant="subtle"
@@ -159,7 +209,7 @@ function App() {
       <Modal
         opened={opened}
         onClose={() => setOpened(false)}
-        title="Edit product (Schema v3)"
+        title="Edit product (Schema v4)"
         centered
       >
         {selectedProduct && (
@@ -167,19 +217,36 @@ function App() {
             <Stack gap="md">
               <TextInput
                 label="Title"
-                value={selectedProduct.title || ''}
+                value={selectedProduct.title || ""}
                 onChange={(e) =>
-                  setSelectedProduct({ ...selectedProduct, title: e.target.value })
+                  setSelectedProduct({
+                    ...selectedProduct,
+                    title: e.target.value,
+                  })
                 }
                 required
               />
 
               <Select
                 label="Category"
-                data={['Hardware', 'Peripheral', 'Accesories', 'Office Supplies']}
-                value={selectedProduct.category || 'Hardware'}
+                data={[
+                  "Hardware",
+                  "Peripheral",
+                  "Accesories",
+                  "Office Supplies",
+                ]}
+                value={selectedProduct.category || "Hardware"}
                 onChange={(val) =>
                   setSelectedProduct({ ...selectedProduct, category: val })
+                }
+              />
+
+              <Select
+                label="Status"
+                data={["standard", "sale", "clearance"]}
+                value={selectedProduct.status || "standard"}
+                onChange={(val) =>
+                  setSelectedProduct({ ...selectedProduct, status: val })
                 }
               />
 
@@ -195,10 +262,12 @@ function App() {
 
               <TextInput
                 label="Location"
-                placeholder="z. B. Industriestr. 12, Hamburg"
-                value={selectedProduct.location || ''}
+                value={selectedProduct.location || ""}
                 onChange={(e) =>
-                  setSelectedProduct({ ...selectedProduct, location: e.target.value })
+                  setSelectedProduct({
+                    ...selectedProduct,
+                    location: e.target.value,
+                  })
                 }
               />
 
