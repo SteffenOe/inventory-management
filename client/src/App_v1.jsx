@@ -93,7 +93,7 @@ function App() {
                 <Table.Td>{p.cost !== undefined ? `${p.cost.toFixed(2)} €` : '—'}</Table.Td>
                 <Table.Td c="dimmed">{p.temp_notes || '—'}</Table.Td>
                 <Table.Td>{p.city}</Table.Td>
-                <Table.Td>{p.stock} Stk.</Table.Td>
+                <Table.Td>{p.stock} pcs.</Table.Td>
                 <Table.Td style={{ textAlign: 'right' }}>
                   <Button
                     size="xs"
