@@ -25,5 +25,23 @@
     "city": "Berlin",
     "stock": 30,
     "status": "standard"
+  },
+  {
+    "title": "Headset",
+    "cost": 79.99,
+    "temp_notes": "Wireless",
+    "street": "Technologiepark 7",
+    "city": "Berlin",
+    "stock": 12,
+    "status": "standard"
+  },
+  {
+    "title": "32-Inches 4k Monitor",
+    "cost": 450.50,
+    "temp_notes": "New version",
+    "street": "Hafenstraße 4",
+    "city": "Bremen",
+    "stock": 20,
+    "status": "standard"
   }
 ]

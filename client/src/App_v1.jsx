@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   Container,
   Title,
@@ -11,8 +11,9 @@ import {
   Stack,
   Paper,
   Text,
-} from '@mantine/core';
-import { IconEdit, IconDatabase } from '@tabler/icons-react';
+  Badge,
+} from "@mantine/core";
+import { IconEdit, IconDatabase } from "@tabler/icons-react";
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -21,11 +22,11 @@ function App() {
 
   const loadProducts = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/products');
+      const res = await fetch("http://localhost:5000/api/products");
       const data = await res.json();
       setProducts(data);
     } catch (err) {
-      console.error('Fehler beim Laden:', err);
+      console.error("Fehler beim Laden:", err);
     }
   };
 
@@ -42,15 +43,15 @@ function App() {
     e.preventDefault();
     try {
       await fetch(`http://localhost:5000/api/products/${selectedProduct._id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(selectedProduct),
       });
       setOpened(false);
       setSelectedProduct(null);
       loadProducts();
     } catch (err) {
-      console.error('Fehler beim Speichern:', err);
+      console.error("Fehler beim Speichern:", err);
     }
   };
 
@@ -60,9 +61,14 @@ function App() {
         <Group justify="space-between">
           <div>
             <Title order={2}>Inventory Management Dashboard</Title>
-            <Text c="dimmed" size="sm">
-              Status: <strong>GUI v1 (Origin Schema)</strong>
-            </Text>
+            <Group gap="xs" mt={4}>
+              <Badge color="cyan" variant="filled">
+                GUI v1
+              </Badge>
+              <Text c="dimmed" size="sm">
+                Initial Schema
+              </Text>
+            </Group>
           </div>
           <Button
             leftSection={<IconDatabase size={16} />}
@@ -81,20 +87,34 @@ function App() {
               <Table.Th>Title</Table.Th>
               <Table.Th>Cost</Table.Th>
               <Table.Th>Note</Table.Th>
+              <Table.Th>Street</Table.Th>
               <Table.Th>City</Table.Th>
               <Table.Th>Stock</Table.Th>
-              <Table.Th style={{ textAlign: 'right' }}>Action</Table.Th>
+              <Table.Th>Schema-Version</Table.Th>
+              <Table.Th style={{ textAlign: "right" }}>Action</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {products.map((p) => (
               <Table.Tr key={p._id}>
                 <Table.Td fw={500}>{p.title}</Table.Td>
-                <Table.Td>{p.cost !== undefined ? `${p.cost.toFixed(2)} €` : '—'}</Table.Td>
-                <Table.Td c="dimmed">{p.temp_notes || '—'}</Table.Td>
+                <Table.Td>
+                  {p.cost !== undefined ? `${p.cost.toFixed(2)} €` : "—"}
+                </Table.Td>
+                <Table.Td c="dimmed">{p.temp_notes || "—"}</Table.Td>
+                <Table.Td>{p.street}</Table.Td>
                 <Table.Td>{p.city}</Table.Td>
                 <Table.Td>{p.stock} pcs.</Table.Td>
-                <Table.Td style={{ textAlign: 'right' }}>
+                <Table.Td>
+                  <Badge
+                    color={p.schemaVersion === 3 ? "green" : "orange"}
+                    size="sm"
+                    variant="dot"
+                  >
+                    v{p.schemaVersion || 1}
+                  </Badge>
+                </Table.Td>
+                <Table.Td style={{ textAlign: "right" }}>
                   <Button
                     size="xs"
                     variant="subtle"
@@ -121,9 +141,12 @@ function App() {
             <Stack gap="md">
               <TextInput
                 label="Title"
-                value={selectedProduct.title || ''}
+                value={selectedProduct.title || ""}
                 onChange={(e) =>
-                  setSelectedProduct({ ...selectedProduct, title: e.target.value })
+                  setSelectedProduct({
+                    ...selectedProduct,
+                    title: e.target.value,
+                  })
                 }
                 required
               />
@@ -140,17 +163,34 @@ function App() {
 
               <TextInput
                 label="Note"
-                value={selectedProduct.temp_notes || ''}
+                value={selectedProduct.temp_notes || ""}
                 onChange={(e) =>
-                  setSelectedProduct({ ...selectedProduct, temp_notes: e.target.value })
+                  setSelectedProduct({
+                    ...selectedProduct,
+                    temp_notes: e.target.value,
+                  })
+                }
+              />
+
+              <TextInput
+                label="Street"
+                value={selectedProduct.street || ""}
+                onChange={(e) =>
+                  setSelectedProduct({
+                    ...selectedProduct,
+                    street: e.target.value,
+                  })
                 }
               />
 
               <TextInput
                 label="City"
-                value={selectedProduct.city || ''}
+                value={selectedProduct.city || ""}
                 onChange={(e) =>
-                  setSelectedProduct({ ...selectedProduct, city: e.target.value })
+                  setSelectedProduct({
+                    ...selectedProduct,
+                    city: e.target.value,
+                  })
                 }
               />
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   Container,
   Title,
@@ -13,8 +13,8 @@ import {
   Paper,
   Text,
   Badge,
-} from '@mantine/core';
-import { IconEdit, IconDatabase } from '@tabler/icons-react';
+} from "@mantine/core";
+import { IconEdit, IconDatabase } from "@tabler/icons-react";
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -23,11 +23,11 @@ function App() {
 
   const loadProducts = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/products');
+      const res = await fetch("http://localhost:5000/api/products");
       const data = await res.json();
       setProducts(data);
     } catch (err) {
-      console.error('Error loading:', err);
+      console.error("Error loading:", err);
     }
   };
 
@@ -47,15 +47,15 @@ function App() {
       delete payload.temp_notes;
 
       await fetch(`http://localhost:5000/api/products/${selectedProduct._id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       setOpened(false);
       setSelectedProduct(null);
       loadProducts();
     } catch (err) {
-      console.error('Error saving:', err);
+      console.error("Error saving:", err);
     }
   };
 
@@ -66,9 +66,12 @@ function App() {
           <div>
             <Title order={2}>Inventory Management Dashboard</Title>
             <Group gap="xs" mt={4}>
-              <Badge color="blue" variant="filled">GUI v2</Badge>
+              <Badge color="blue" variant="filled">
+                GUI v2
+              </Badge>
               <Text c="dimmed" size="sm">
-                Evolution: <strong>Field added (Category) & Feld removed (Notes)</strong>
+                Evolution:{" "}
+                <strong>Field added (Category) & Feld removed (Notes)</strong>
               </Text>
             </Group>
           </div>
@@ -89,9 +92,11 @@ function App() {
               <Table.Th>Title</Table.Th>
               <Table.Th>Category</Table.Th>
               <Table.Th>Cost</Table.Th>
+              <Table.Th>Street</Table.Th>
               <Table.Th>City</Table.Th>
               <Table.Th>Stock</Table.Th>
-              <Table.Th style={{ textAlign: 'right' }}>Actions</Table.Th>
+              <Table.Th>Schema-Version</Table.Th>
+              <Table.Th style={{ textAlign: "right" }}>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -99,14 +104,26 @@ function App() {
               <Table.Tr key={p._id}>
                 <Table.Td fw={500}>{p.title}</Table.Td>
                 <Table.Td>
-                  <Badge color={p.category ? 'teal' : 'gray'} variant="light">
-                    {p.category || 'No category'}
+                  <Badge color={p.category ? "teal" : "gray"} variant="light">
+                    {p.category || "No category"}
                   </Badge>
                 </Table.Td>
-                <Table.Td>{p.cost !== undefined ? `${p.cost.toFixed(2)} €` : '—'}</Table.Td>
+                <Table.Td>
+                  {p.cost !== undefined ? `${p.cost.toFixed(2)} €` : "—"}
+                </Table.Td>
+                <Table.Td>{p.street}</Table.Td>
                 <Table.Td>{p.city}</Table.Td>
                 <Table.Td>{p.stock} pcs.</Table.Td>
-                <Table.Td style={{ textAlign: 'right' }}>
+                <Table.Td>
+                  <Badge
+                    color={p.schemaVersion === 3 ? "green" : "orange"}
+                    size="sm"
+                    variant="dot"
+                  >
+                    v{p.schemaVersion || 1}
+                  </Badge>
+                </Table.Td>
+                <Table.Td style={{ textAlign: "right" }}>
                   <Button
                     size="xs"
                     variant="subtle"
@@ -133,9 +150,12 @@ function App() {
             <Stack gap="md">
               <TextInput
                 label="Title"
-                value={selectedProduct.title || ''}
+                value={selectedProduct.title || ""}
                 onChange={(e) =>
-                  setSelectedProduct({ ...selectedProduct, title: e.target.value })
+                  setSelectedProduct({
+                    ...selectedProduct,
+                    title: e.target.value,
+                  })
                 }
                 required
               />
@@ -143,7 +163,12 @@ function App() {
               <Select
                 label="Category"
                 placeholder="Select Category"
-                data={['Hardware', 'Peripheral', 'Accesories', 'Office Supplies']}
+                data={[
+                  "Hardware",
+                  "Peripheral",
+                  "Accesories",
+                  "Office Supplies",
+                ]}
                 value={selectedProduct.category || null}
                 onChange={(val) =>
                   setSelectedProduct({ ...selectedProduct, category: val })
@@ -161,10 +186,24 @@ function App() {
               />
 
               <TextInput
-                label="City"
-                value={selectedProduct.city || ''}
+                label="Street"
+                value={selectedProduct.street || ""}
                 onChange={(e) =>
-                  setSelectedProduct({ ...selectedProduct, city: e.target.value })
+                  setSelectedProduct({
+                    ...selectedProduct,
+                    street: e.target.value,
+                  })
+                }
+              />
+
+              <TextInput
+                label="City"
+                value={selectedProduct.city || ""}
+                onChange={(e) =>
+                  setSelectedProduct({
+                    ...selectedProduct,
+                    city: e.target.value,
+                  })
                 }
               />
 

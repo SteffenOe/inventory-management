@@ -1,296 +1,141 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Container,
-  Title,
-  Table,
-  Button,
-  Modal,
-  TextInput,
-  NumberInput,
-  Select,
-  Group,
-  Stack,
   Paper,
-  Text,
+  Group,
+  SegmentedControl,
+  Text, 
   Badge,
+  Button,
+  Menu,
 } from "@mantine/core";
-import { IconEdit, IconDatabase, IconFlame } from "@tabler/icons-react";
-import { notifications } from '@mantine/notifications';
+import {
+  IconDatabase,
+  IconRotateDot,
+  IconArrowRight,
+  IconChevronDown,
+} from "@tabler/icons-react";
 
-function App() {
-  const [products, setProducts] = useState([]);
-  const [opened, setOpened] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+import AppV1 from "./App_v1.jsx";
+import AppV2 from "./App_v2.jsx";
+import AppV3 from "./App_v3.jsx";
+import AppV4 from "./App_v4.jsx";
 
-  const loadProducts = async () => {
+export default function App() {
+  const [version, setVersion] = useState("v1");
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  const triggerDbAction = async (endpoint, targetVersion = null) => {
+    setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/products");
-      const data = await res.json();
-      setProducts(data);
-    } catch (err) {
-      console.error("Error loading:", err);
-    }
-  };
-
-  useEffect(() => {
-    loadProducts();
-  }, []);
-
-  const handleTriggerSaleCampaign = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/api/products/apply-sale", {
+      const res = await fetch(`http://localhost:5000/api/dev/${endpoint}`, {
         method: "POST",
       });
       const data = await res.json();
-      notifications.show({
-        title: "Success",
-        message: `${data.modifiedCount} Products updated.`,
-        color: "green"
-      });
-      loadProducts();
+      console.log("DB-Action executed:", data);
+
+      if (targetVersion) {
+        setVersion(targetVersion);
+      }
+      setRefreshKey((prev) => prev + 1);
     } catch (err) {
-      console.error("Error while applying sale:", err);
-    }
-  };
-
-  const handleEditClick = (product) => {
-    const normalizedPrice = product.price ?? product.cost ?? 0;
-    const normalizedLocation =
-      product.location ??
-      (product.street || product.city
-        ? `${product.street || ""}, ${product.city || ""}`
-        : "");
-
-    setSelectedProduct({
-      ...product,
-      price: normalizedPrice,
-      location: normalizedLocation,
-      status: product.status || "standard",
-    });
-    setOpened(true);
-  };
-
-  const handleSave = async (e) => {
-    e.preventDefault();
-    try {
-      const payload = { ...selectedProduct };
-      delete payload.cost;
-      delete payload.street;
-      delete payload.city;
-      delete payload.temp_notes;
-      payload.schemaVersion = 4;
-
-      await fetch(`http://localhost:5000/api/products/${selectedProduct._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      setOpened(false);
-      setSelectedProduct(null);
-      loadProducts();
-    } catch (err) {
-      console.error("Error saving:", err);
+      console.error("Error executing DB-Action:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Container size="lg" py="xl">
-      <Paper p="md" shadow="xs" radius="md" withBorder mb="lg">
-        <Group justify="space-between">
-          <div>
-            <Title order={2}>Inventory Management Dashboard</Title>
-            <Group gap="xs" mt={4}>
-              <Badge color="red" variant="filled">
-                GUI v4
-              </Badge>
-              <Text c="dimmed" size="sm">
-                Evolution:{" "}
-                <strong>
-                  Conditional Updates of fields Sale & Rabattierung where stock
-                  ≥ 20
-                </strong>
-              </Text>
-            </Group>
-          </div>
-          <Group>
-            <Button
-              leftSection={<IconFlame size={16} />}
-              color="red"
-              variant="filled"
-              onClick={handleTriggerSaleCampaign}
-            >
-              Apply sale (stock ≥ 20)
-            </Button>
-            <Button
-              leftSection={<IconDatabase size={16} />}
-              variant="light"
-              onClick={loadProducts}
-            >
-              Update
-            </Button>
-          </Group>
-        </Group>
-      </Paper>
-
-      <Paper shadow="xs" radius="md" withBorder p="sm">
-        <Table striped highlightOnHover verticalSpacing="sm">
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Title</Table.Th>
-              <Table.Th>Category</Table.Th>
-              <Table.Th>Status</Table.Th>
-              <Table.Th>Price</Table.Th>
-              <Table.Th>Location</Table.Th>
-              <Table.Th>Stock</Table.Th>
-              <Table.Th>Schema</Table.Th>
-              <Table.Th style={{ textAlign: "right" }}>Actions</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {products.map((p) => {
-              const currentPrice = p.price ?? p.cost ?? 0;
-              const isSale = p.status === "sale";
-
-              return (
-                <Table.Tr key={p._id}>
-                  <Table.Td fw={500}>{p.title}</Table.Td>
-                  <Table.Td>
-                    <Badge color="teal" variant="light">
-                      {p.category || "Hardware"}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    <Badge
-                      color={isSale ? "red" : "gray"}
-                      variant={isSale ? "filled" : "outline"}
-                    >
-                      {p.status ? p.status.toUpperCase() : "STANDARD"}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td fw={700} c={isSale ? "red" : "dark"}>
-                    {currentPrice.toFixed(2)} €
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap={4}>
-                      <Text size="sm">{p.location || "—"}</Text>
-                    </Group>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text
-                      fw={p.stock >= 20 ? 700 : 400}
-                      c={p.stock >= 20 ? "orange" : "inherit"}
-                    >
-                      {p.stock} pcs.
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Badge color="violet" size="sm" variant="dot">
-                      v{p.schemaVersion || 1}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td style={{ textAlign: "right" }}>
-                    <Button
-                      size="xs"
-                      variant="subtle"
-                      leftSection={<IconEdit size={14} />}
-                      onClick={() => handleEditClick(p)}
-                    >
-                      Edit
-                    </Button>
-                  </Table.Td>
-                </Table.Tr>
-              );
-            })}
-          </Table.Tbody>
-        </Table>
-      </Paper>
-
-      <Modal
-        opened={opened}
-        onClose={() => setOpened(false)}
-        title="Edit product (Schema v4)"
-        centered
+    <div>
+      <Paper
+        p="xs"
+        shadow="sm"
+        radius={0}
+        withBorder
+        style={{
+          position: "sticky",
+          top: 0,
+          backgroundColor: "var(--mantine-color-body)",
+        }}
       >
-        {selectedProduct && (
-          <form onSubmit={handleSave}>
-            <Stack gap="md">
-              <TextInput
-                label="Title"
-                value={selectedProduct.title || ""}
-                onChange={(e) =>
-                  setSelectedProduct({
-                    ...selectedProduct,
-                    title: e.target.value,
-                  })
-                }
-                required
-              />
+        <Container size="lg">
+          <Group justify="space-between" align="center">
+            <Group gap="xs">
+              <Badge variant="dot" color="blue" ml="xs">
+                Active: {version.toUpperCase()}
+              </Badge>
+            </Group>
 
-              <Select
-                label="Category"
+            <Group gap="xs">
+              <Text size="xs" c="dimmed">
+                UI-Version:
+              </Text>
+              <SegmentedControl
+                value={version}
+                onChange={setVersion}
                 data={[
-                  "Hardware",
-                  "Peripheral",
-                  "Accesories",
-                  "Office Supplies",
+                  { label: "v1 Base", value: "v1" },
+                  { label: "v2 Add/Remove", value: "v2" },
+                  { label: "v3 Rename/Merge", value: "v3" },
+                  { label: "v4 Conditional", value: "v4" },
                 ]}
-                value={selectedProduct.category || "Hardware"}
-                onChange={(val) =>
-                  setSelectedProduct({ ...selectedProduct, category: val })
-                }
+                color="blue"
+                size="xs"
               />
+            </Group>
 
-              <Select
-                label="Status"
-                data={["standard", "sale", "clearance"]}
-                value={selectedProduct.status || "standard"}
-                onChange={(val) =>
-                  setSelectedProduct({ ...selectedProduct, status: val })
-                }
-              />
+            <Group gap="xs">
+              <Button
+                size="xs"
+                variant="light"
+                color="red"
+                leftSection={<IconRotateDot size={14} />}
+                loading={loading}
+                onClick={() => triggerDbAction("reset-v1", "v1")}
+              >
+                Reset DB (v1)
+              </Button>
 
-              <NumberInput
-                label="Price (€)"
-                value={selectedProduct.price ?? 0}
-                decimalScale={2}
-                fixedDecimalScale
-                onChange={(val) =>
-                  setSelectedProduct({ ...selectedProduct, price: Number(val) })
-                }
-              />
+              <Menu shadow="md" width={220} position="bottom-end">
+                <Menu.Target>
+                  <Button
+                    size="xs"
+                    variant="filled"
+                    color="teal"
+                    leftSection={<IconDatabase size={14} />}
+                    rightSection={<IconChevronDown size={12} />}
+                    loading={loading}
+                  >
+                    DB-Transformation
+                  </Button>
+                </Menu.Target>
 
-              <TextInput
-                label="Location"
-                value={selectedProduct.location || ""}
-                onChange={(e) =>
-                  setSelectedProduct({
-                    ...selectedProduct,
-                    location: e.target.value,
-                  })
-                }
-              />
+                <Menu.Dropdown>
+                  <Menu.Label>Schema-Migration</Menu.Label>
+                  <Menu.Item
+                    leftSection={<IconArrowRight size={14} />}
+                    onClick={() => triggerDbAction("migrate-v2", "v2")}
+                  >
+                    Migrate to v2
+                  </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconArrowRight size={14} />}
+                    onClick={() => triggerDbAction("migrate-v3", "v3")}
+                  >
+                    Migrate to v3
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            </Group>
+          </Group>
+        </Container>
+      </Paper>
 
-              <NumberInput
-                label="Stock"
-                value={selectedProduct.stock ?? 0}
-                onChange={(val) =>
-                  setSelectedProduct({ ...selectedProduct, stock: Number(val) })
-                }
-              />
-
-              <Group justify="flex-end" mt="md">
-                <Button variant="default" onClick={() => setOpened(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit">Save</Button>
-              </Group>
-            </Stack>
-          </form>
-        )}
-      </Modal>
-    </Container>
+      {version === "v1" && <AppV1 key={`v1-${refreshKey}`} />}
+      {version === "v2" && <AppV2 key={`v2-${refreshKey}`} />}
+      {version === "v3" && <AppV3 key={`v3-${refreshKey}`} />}
+      {version === "v4" && <AppV4 key={`v4-${refreshKey}`} />}
+    </div>
   );
 }
-
-export default App;

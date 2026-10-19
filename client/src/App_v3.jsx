@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   Container,
   Title,
@@ -13,8 +13,8 @@ import {
   Paper,
   Text,
   Badge,
-} from '@mantine/core';
-import { IconEdit, IconDatabase } from '@tabler/icons-react';
+} from "@mantine/core";
+import { IconEdit, IconDatabase } from "@tabler/icons-react";
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -23,11 +23,11 @@ function App() {
 
   const loadProducts = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/products');
+      const res = await fetch("http://localhost:5000/api/products");
       const data = await res.json();
       setProducts(data);
     } catch (err) {
-      console.error('Error loading:', err);
+      console.error("Error loading:", err);
     }
   };
 
@@ -40,8 +40,8 @@ function App() {
     const normalizedLocation =
       product.location ??
       (product.street || product.city
-        ? `${product.street || ''}, ${product.city || ''}`
-        : '');
+        ? `${product.street || ""}, ${product.city || ""}`
+        : "");
 
     setSelectedProduct({
       ...product,
@@ -63,8 +63,8 @@ function App() {
       payload.schemaVersion = 3;
 
       await fetch(`http://localhost:5000/api/products/${selectedProduct._id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
@@ -72,7 +72,7 @@ function App() {
       setSelectedProduct(null);
       loadProducts();
     } catch (err) {
-      console.error('Error saving:', err);
+      console.error("Error saving:", err);
     }
   };
 
@@ -83,9 +83,15 @@ function App() {
           <div>
             <Title order={2}>Inventory Management Dashboard</Title>
             <Group gap="xs" mt={4}>
-              <Badge color="violet" variant="filled">GUI v3</Badge>
+              <Badge color="violet" variant="filled">
+                GUI v3
+              </Badge>
               <Text c="dimmed" size="sm">
-                Evolution: <strong>Field renamed (cost → price) & Fields merged (street + city → location)</strong>
+                Evolution:{" "}
+                <strong>
+                  Field renamed (cost → price) & Fields merged (street + city →
+                  location)
+                </strong>
               </Text>
             </Group>
           </div>
@@ -109,7 +115,7 @@ function App() {
               <Table.Th>Location</Table.Th>
               <Table.Th>Stock</Table.Th>
               <Table.Th>Schema-Version</Table.Th>
-              <Table.Th style={{ textAlign: 'right' }}>Actions</Table.Th>
+              <Table.Th style={{ textAlign: "right" }}>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -117,29 +123,35 @@ function App() {
               const currentPrice = p.price ?? p.cost ?? 0;
               const currentLocation =
                 p.location ||
-                (p.street || p.city ? `${p.street || ''}, ${p.city || ''}` : '—');
+                (p.street || p.city
+                  ? `${p.street || ""}, ${p.city || ""}`
+                  : "—");
 
               return (
                 <Table.Tr key={p._id}>
                   <Table.Td fw={500}>{p.title}</Table.Td>
                   <Table.Td>
                     <Badge color="teal" variant="light">
-                      {p.category || 'Allgemein'}
+                      {p.category || "No category"}
                     </Badge>
                   </Table.Td>
                   <Table.Td fw={600} c="blue">
                     {currentPrice.toFixed(2)} €
                   </Table.Td>
                   <Table.Td>
-                      <Text size="sm">{currentLocation}</Text>
+                    <Text size="sm">{currentLocation}</Text>
                   </Table.Td>
                   <Table.Td>{p.stock} pcs.</Table.Td>
                   <Table.Td>
-                    <Badge color={p.schemaVersion === 3 ? 'green' : 'orange'} size="sm" variant="dot">
+                    <Badge
+                      color={p.schemaVersion === 3 ? "green" : "orange"}
+                      size="sm"
+                      variant="dot"
+                    >
                       v{p.schemaVersion || 1}
                     </Badge>
                   </Table.Td>
-                  <Table.Td style={{ textAlign: 'right' }}>
+                  <Table.Td style={{ textAlign: "right" }}>
                     <Button
                       size="xs"
                       variant="subtle"
@@ -167,17 +179,25 @@ function App() {
             <Stack gap="md">
               <TextInput
                 label="Title"
-                value={selectedProduct.title || ''}
+                value={selectedProduct.title || ""}
                 onChange={(e) =>
-                  setSelectedProduct({ ...selectedProduct, title: e.target.value })
+                  setSelectedProduct({
+                    ...selectedProduct,
+                    title: e.target.value,
+                  })
                 }
                 required
               />
 
               <Select
                 label="Category"
-                data={['Hardware', 'Peripheral', 'Accesories', 'Office Supplies']}
-                value={selectedProduct.category || 'Hardware'}
+                data={[
+                  "Hardware",
+                  "Peripheral",
+                  "Accesories",
+                  "Office Supplies",
+                ]}
+                value={selectedProduct.category || "Hardware"}
                 onChange={(val) =>
                   setSelectedProduct({ ...selectedProduct, category: val })
                 }
@@ -196,9 +216,12 @@ function App() {
               <TextInput
                 label="Location"
                 placeholder="z. B. Industriestr. 12, Hamburg"
-                value={selectedProduct.location || ''}
+                value={selectedProduct.location || ""}
                 onChange={(e) =>
-                  setSelectedProduct({ ...selectedProduct, location: e.target.value })
+                  setSelectedProduct({
+                    ...selectedProduct,
+                    location: e.target.value,
+                  })
                 }
               />
 
