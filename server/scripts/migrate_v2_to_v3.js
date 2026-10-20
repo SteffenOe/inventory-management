@@ -40,7 +40,7 @@ async function runMigrationV3() {
       ]
     );
 
-    console.log(`Merging complted: ${mergeResult.modifiedCount} documents merged.`);
+    console.log(`Merging completed: ${mergeResult.modifiedCount} documents merged.`);
   } catch (error) {
     console.error('Error during migration to v3:', error);
   } finally {
